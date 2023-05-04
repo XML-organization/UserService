@@ -1,36 +1,64 @@
 package handler
 
 import (
-	"encoding/json"
-	"net/http"
-
-	"user_service/dto"
+	"context"
 
 	"user_service/service"
+
+	pb "github.com/XML-organization/common/proto/user_service"
 )
 
 type UserHandler struct {
+	pb.UnimplementedUserServiceServer
 	UserService *service.UserService
 }
 
-func (userHandler *UserHandler) UpdateUser(writer http.ResponseWriter, req *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-	var user dto.ChangeUserDTO
-	err := decoder.Decode(&user)
-	if err != nil {
-		panic(err)
+func NewUserHandler(service *service.UserService) *UserHandler {
+	return &UserHandler{
+		UserService: service,
 	}
-	message := userHandler.UserService.UpdateUser(user)
-	json.NewEncoder(writer).Encode(message)
 }
 
-func (userHandler *UserHandler) ChangePassword(writer http.ResponseWriter, req *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-	var userPasswords dto.UserPassword
-	err := decoder.Decode(&userPasswords)
-	if err != nil {
-		panic(err)
+func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+
+	println("////////")
+	println(in.Email)
+	println(in.Id)
+
+	message, err := userHandler.UserService.UpdateUser(mapUserFromUpdateUserRequest(in))
+
+	return &pb.UpdateUserResponse{
+		Message: message.Message,
+	}, err
+}
+
+func (userHandler *UserHandler) ChangePassword(ctx context.Context, in *pb.ChangePasswordRequest) (*pb.ChangePasswordResponse, error) {
+	message, err := userHandler.UserService.ChangePassword(mapPassword(in))
+
+	return &pb.ChangePasswordResponse{
+		Message: message.Message,
+	}, err
+}
+
+func (userHandler *UserHandler) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+
+	user := mapUserFromCreateUserRequest(in)
+
+	message, err := userHandler.UserService.CreateUser(user)
+
+	response := pb.CreateUserResponse{
+		Message: message.Message,
 	}
-	message := userHandler.UserService.ChangePassword(userPasswords)
-	json.NewEncoder(writer).Encode(message)
+
+	return &response, err
+}
+
+func (userHandler *UserHandler) Print(ctx context.Context, in *pb.PrintRequest) (*pb.PrintResponse, error) {
+	println("adasdasdasdas")
+
+	println(in.Message)
+
+	return &pb.PrintResponse{
+		Message: in.Message,
+	}, nil
 }

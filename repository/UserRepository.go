@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"user_service/dto"
 	"user_service/model"
 
 	"github.com/google/uuid"
@@ -10,10 +9,20 @@ import (
 
 type UserRepository struct {
 	DatabaseConnection *gorm.DB
-	AddressRepository  *AddressRepository
 }
 
-func (repo *UserRepository) UpdateUser(user dto.ChangeUserDTO) error {
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	err := db.AutoMigrate(&model.User{}, &model.Address{})
+	if err != nil {
+		return nil
+	}
+
+	return &UserRepository{
+		DatabaseConnection: db,
+	}
+}
+
+func (repo *UserRepository) UpdateUser(user model.ChangeUserDTO) error {
 	//dbResult := repo.DatabaseConnection.Update(user)
 
 	loggedUser, err := repo.FindById(user.ID)
@@ -66,7 +75,7 @@ func (repo *UserRepository) UpdateUser(user dto.ChangeUserDTO) error {
 	return nil
 }
 
-func (repo *UserRepository) ChangePassword(userPasswords dto.UserPassword) model.RequestMessage {
+func (repo *UserRepository) ChangePassword(userPasswords model.UserPassword) (model.RequestMessage, error) {
 
 	sqlStatementUser := `
 		UPDATE users
@@ -79,13 +88,13 @@ func (repo *UserRepository) ChangePassword(userPasswords dto.UserPassword) model
 		message := model.RequestMessage{
 			Message: "An error occurred, please try again!",
 		}
-		return message
+		return message, dbResult1.Error
 	}
 
 	message := model.RequestMessage{
 		Message: "Success!",
 	}
-	return message
+	return message, nil
 }
 
 func (repo *UserRepository) FindById(id uuid.UUID) (model.User, error) {
