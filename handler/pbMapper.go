@@ -4,6 +4,7 @@ import (
 	"user_service/model"
 
 	pb "github.com/XML-organization/common/proto/user_service"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/google/uuid"
 )
@@ -17,20 +18,19 @@ func mapUserFromCreateUserRequest(user *pb.CreateUserRequest) model.User {
 		panic(err)
 	}
 
-	addressId, err := uuid.Parse(user.Address.Id)
-	if err != nil {
-		panic(err)
-	}
+	password, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 
 	return model.User{
-		ID:        userId,
-		Email:     user.Email,
-		Password:  user.Password,
-		Role:      model.Role(user.Role.Number()),
-		Name:      user.Name,
-		Surname:   user.Surname,
-		AddressID: addressId,
-		Address:   mapAddress(user.Address),
+		ID:       userId,
+		Email:    user.Email,
+		Password: password,
+		Role:     model.Role(user.Role.Number()),
+		Name:     user.Name,
+		Surname:  user.Surname,
+		Country:  user.Country,
+		City:     user.City,
+		Street:   user.Street,
+		Number:   user.Number,
 	}
 }
 
@@ -62,19 +62,16 @@ func mapUserFromUpdateUserRequest(user *pb.UpdateUserRequest) model.ChangeUserDT
 		panic(err)
 	}
 
-	addressId, err := uuid.Parse(user.Address.Id)
-	if err != nil {
-		panic(err)
-	}
-
 	return model.ChangeUserDTO{
-		ID:        userId,
-		Email:     user.Email,
-		Password:  user.Password,
-		Role:      model.Role(user.Role.Number()),
-		Name:      user.Name,
-		Surname:   user.Surname,
-		AddressID: addressId,
-		Address:   mapAddress(user.Address),
+		ID:       userId,
+		Email:    user.Email,
+		Password: user.Password,
+		Role:     model.Role(user.Role.Number()),
+		Name:     user.Name,
+		Surname:  user.Surname,
+		Country:  user.Country,
+		City:     user.City,
+		Street:   user.Street,
+		Number:   user.Number,
 	}
 }

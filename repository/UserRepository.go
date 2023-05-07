@@ -22,56 +22,25 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
+/*sqlStatementUser := `
+UPDATE users
+SET name = $2, surname = $3, address_id = $4, email = $5
+WHERE id = $1;`*/
+
 func (repo *UserRepository) UpdateUser(user model.ChangeUserDTO) error {
 	//dbResult := repo.DatabaseConnection.Update(user)
 
-	loggedUser, err := repo.FindById(user.ID)
-	var userOldAddress model.Address
-	err1 := repo.DatabaseConnection.Where("id = ?", loggedUser.AddressID).First(&userOldAddress)
-
-	if err != nil {
-		return err
-	}
-
-	if err1.Error != nil {
-		return err1.Error
-	}
-
 	sqlStatementUser := `
 		UPDATE users
-		SET name = $2, surname = $3, address_id = $4, email = $5
+		SET name = $2, surname = $3, email = $4, country = $5, city = $6, street = $7, number = $8
 		WHERE id = $1;`
 
-	sqlStatementUser1 := `
-		UPDATE users
-		SET name = $2, surname = $3, email = $4
-		WHERE id = $1;`
+	dbResult := repo.DatabaseConnection.Exec(sqlStatementUser, user.ID, user.Name, user.Surname, user.Email, user.Country, user.City, user.Street, user.Number)
 
-	id := uuid.New()
-	address := model.Address{
-		ID:      id,
-		Country: user.Address.Country,
-		City:    user.Address.City,
-		Street:  user.Address.Street,
-		Number:  user.Address.Number,
+	if dbResult.Error != nil {
+		return dbResult.Error
 	}
 
-	if userOldAddress.Country == address.Country && userOldAddress.City == address.City && userOldAddress.Street == address.Street && userOldAddress.Number == address.Number {
-		dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser1, user.ID, user.Name, user.Surname, user.Email)
-		if dbResult1.Error != nil {
-			return dbResult1.Error
-		}
-	} else {
-		dbResult2 := repo.DatabaseConnection.Save(address)
-		dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, user.ID, user.Name, user.Surname, id, user.Email)
-
-		if dbResult1.Error != nil {
-			return dbResult1.Error
-		}
-		if dbResult2.Error != nil {
-			return dbResult2.Error
-		}
-	}
 	return nil
 }
 
@@ -110,7 +79,15 @@ func (repo *UserRepository) FindById(id uuid.UUID) (model.User, error) {
 }
 
 func (repo *UserRepository) CreateUser(user model.User) model.RequestMessage {
-	dbResult := repo.DatabaseConnection.Save(user)
+	println("usao sam u create user metodu u repozitorijumu")
+	println(user.Email)
+	//println(user.ID)
+	println(user.Password)
+	println(user.Country)
+	println("///////////////////////////////////////")
+	dbResult := repo.DatabaseConnection.Save(&user)
+
+	println("ISPOD create user metode u repozitorijumu")
 
 	if dbResult.Error != nil {
 		return model.RequestMessage{

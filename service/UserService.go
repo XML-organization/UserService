@@ -48,6 +48,8 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 
 func (service *UserService) CreateUser(user model.User) (model.RequestMessage, error) {
 
+	println("usao sam u create user metodu na user service strani")
+
 	response := model.RequestMessage{
 		Message: service.UserRepo.CreateUser(user).Message,
 	}

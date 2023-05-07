@@ -5,14 +5,16 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Password  []byte    `json:"password" gorm:"not null;type:string;default:null"`
-	Role      Role      `json:"role"`
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	AddressID uuid.UUID `json:"address_id"`
-	Address   Address   `json:"address" gorm:"foreignKey:AddressID"`
+	ID       uuid.UUID `json:"id"`
+	Email    string    `json:"email"`
+	Password []byte    `json:"password" gorm:"not null;type:string;default:null"`
+	Role     Role      `json:"role"`
+	Name     string    `json:"name"`
+	Surname  string    `json:"surname"`
+	Country  string    `json:"country" gorm:"not null;type:string"`
+	City     string    `json:"city" gorm:"not null;type:string"`
+	Street   string    `json:"street" gorm:"not null;type:string"`
+	Number   string    `json:"number" gorm:"not null;type:string"`
 }
 
 type Role int
@@ -42,12 +44,14 @@ type UserPassword struct {
 }
 
 type ChangeUserDTO struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	Role      Role      `json:"role"`
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	AddressID uuid.UUID `json:"address_id"`
-	Address   Address   `json:"address" gorm:"foreignKey:AddressID"`
+	ID       uuid.UUID `json:"id"`
+	Email    string    `json:"email"`
+	Password string    `json:"password"`
+	Role     Role      `json:"role"`
+	Name     string    `json:"name"`
+	Surname  string    `json:"surname"`
+	Country  string    `json:"country" gorm:"not null;type:string"`
+	City     string    `json:"city" gorm:"not null;type:string"`
+	Street   string    `json:"street" gorm:"not null;type:string"`
+	Number   string    `json:"number" gorm:"not null;type:string"`
 }
