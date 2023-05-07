@@ -4,6 +4,7 @@ import (
 	"user_service/model"
 	"user_service/repository"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -49,6 +50,11 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 func (service *UserService) CreateUser(user model.User) (model.RequestMessage, error) {
 
 	println("usao sam u create user metodu na user service strani")
+
+	id, _ := uuid.NewUUID()
+	user.ID = id
+
+	println("id usera: " + user.ID.String())
 
 	response := model.RequestMessage{
 		Message: service.UserRepo.CreateUser(user).Message,
