@@ -38,9 +38,9 @@ type RequestMessage struct {
 }
 
 type UserPassword struct {
-	ID          uuid.UUID `json:"id"`
-	NewPassword string    `json:"new_password"`
-	OldPassword string    `json:"old_password"`
+	Email       string `json:"email"`
+	NewPassword string `json:"new_password"`
+	OldPassword string `json:"old_password"`
 }
 
 type ChangeUserDTO struct {

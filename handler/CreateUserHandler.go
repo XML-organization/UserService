@@ -30,17 +30,18 @@ func (handler *CreateUserCommandHandler) handle(command *events.CreateUserComman
 	reply := events.CreateUserReply{User: command.User}
 
 	println("Usao sam u handle metodu na User service strani")
+	println("Ovo je tip comande koju sam dobio: %v", command.Type)
 
 	switch command.Type {
 	case events.SaveUser:
 		user := mapSagaUserToUser(&command.User)
 		_, err := handler.userService.CreateUser(*user)
-		println("Saga (User servise side): User created successfuly!")
 		if err != nil {
 			reply.Type = events.UserNotSaved
-			println("Saga (User servise side): User dont created successfuly!")
+			println("Saga: User dont created successfuly!")
 			break
 		}
+		println("Saga: User created successfuly!")
 		reply.Type = events.UserSaved
 	default:
 		reply.Type = events.UnknownReply

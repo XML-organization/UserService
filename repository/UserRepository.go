@@ -49,9 +49,9 @@ func (repo *UserRepository) ChangePassword(userPasswords model.UserPassword) (mo
 	sqlStatementUser := `
 		UPDATE users
 		SET password = $2
-		WHERE id = $1;`
+		WHERE email = $1;`
 
-	dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, userPasswords.ID, userPasswords.NewPassword)
+	dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, userPasswords.Email, userPasswords.NewPassword)
 
 	if dbResult1.Error != nil {
 		message := model.RequestMessage{
@@ -78,7 +78,19 @@ func (repo *UserRepository) FindById(id uuid.UUID) (model.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) CreateUser(user model.User) model.RequestMessage {
+func (repo *UserRepository) FindByEmail(email string) (model.User, error) {
+	user := model.User{}
+
+	dbResult := repo.DatabaseConnection.First(&user, "email = ?", email)
+
+	if dbResult != nil {
+		return user, dbResult.Error
+	}
+
+	return user, nil
+}
+
+func (repo *UserRepository) CreateUser(user model.User) (model.RequestMessage, error) {
 	println("usao sam u create user metodu u repozitorijumu")
 	println(user.Email)
 	//println(user.ID)
@@ -92,10 +104,10 @@ func (repo *UserRepository) CreateUser(user model.User) model.RequestMessage {
 	if dbResult.Error != nil {
 		return model.RequestMessage{
 			Message: "An error occured, please try again!",
-		}
+		}, dbResult.Error
 	}
 
 	return model.RequestMessage{
 		Message: "Success!",
-	}
+	}, nil
 }

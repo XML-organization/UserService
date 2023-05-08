@@ -9,12 +9,14 @@ import (
 )
 
 type UserService struct {
-	UserRepo *repository.UserRepository
+	UserRepo     *repository.UserRepository
+	orchestrator *ChangePasswordOrchestrator
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+func NewUserService(repo *repository.UserRepository, orchestrator *ChangePasswordOrchestrator) *UserService {
 	return &UserService{
-		UserRepo: repo,
+		UserRepo:     repo,
+		orchestrator: orchestrator,
 	}
 }
 
@@ -27,7 +29,13 @@ func (service *UserService) UpdateUser(user model.ChangeUserDTO) (model.RequestM
 }
 
 func (service *UserService) ChangePassword(userPasswords model.UserPassword) (model.RequestMessage, error) {
-	user, err := service.UserRepo.FindById(userPasswords.ID)
+	user, err := service.UserRepo.FindByEmail(userPasswords.Email)
+
+	passwords := model.UserPassword{
+		Email:       userPasswords.Email,
+		OldPassword: userPasswords.OldPassword,
+		NewPassword: userPasswords.NewPassword,
+	}
 
 	if err != nil {
 		message := model.RequestMessage{
@@ -44,7 +52,27 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 	newPassword, _ := bcrypt.GenerateFromPassword([]byte(userPasswords.NewPassword), 14)
 	userPasswords.NewPassword = string(newPassword)
 
-	return service.UserRepo.ChangePassword(userPasswords)
+	message, err := service.UserRepo.ChangePassword(userPasswords)
+	if err != nil {
+		message := model.RequestMessage{
+			Message: message.Message,
+		}
+		return message, err
+	}
+
+	err1 := service.orchestrator.Start(&passwords)
+	if err1 != nil {
+		service.UserRepo.ChangePassword(*mapRollbackChangePasswordDTO(&userPasswords))
+		message := model.RequestMessage{
+			Message: "An error occured, please try again!",
+		}
+		return message, err
+	}
+
+	message1 := model.RequestMessage{
+		Message: "Successful",
+	}
+	return message1, err
 }
 
 func (service *UserService) CreateUser(user model.User) (model.RequestMessage, error) {
@@ -56,8 +84,18 @@ func (service *UserService) CreateUser(user model.User) (model.RequestMessage, e
 
 	println("id usera: " + user.ID.String())
 
+	message, err := service.UserRepo.CreateUser(user)
+
+	if err != nil {
+		response := model.RequestMessage{
+			Message: "An error occured, please try again!",
+		}
+
+		return response, err
+	}
+
 	response := model.RequestMessage{
-		Message: service.UserRepo.CreateUser(user).Message,
+		Message: message.Message,
 	}
 
 	return response, nil

@@ -34,8 +34,20 @@ const (
 func (server *Server) Start() {
 	postgresClient := server.initPostgresClient()
 	userRepo := server.initUserRepository(postgresClient)
-	userService := server.initUserService(userRepo)
 
+	//change password orchestrator
+	commandPublisher := server.initPublisher(server.config.ChangePasswordCommandSubject)
+	replySubscriber := server.initSubscriber(server.config.ChangePasswordReplySubject, QueueGroup)
+	changePasswordOrchestrator := server.initChangePasswordOrchestrator(commandPublisher, replySubscriber)
+
+	userService := server.initUserService(userRepo, changePasswordOrchestrator)
+
+	//change password
+	commandSubscriber1 := server.initSubscriber(server.config.ChangePasswordCommandSubject, QueueGroup)
+	replyPublisher1 := server.initPublisher(server.config.ChangePasswordReplySubject)
+	server.initCreateUserHandler(userService, replyPublisher1, commandSubscriber1)
+
+	//create user
 	commandSubscriber := server.initSubscriber(server.config.CreateUserCommandSubject, QueueGroup)
 	replyPublisher := server.initPublisher(server.config.CreateUserReplySubject)
 	server.initCreateUserHandler(userService, replyPublisher, commandSubscriber)
@@ -43,6 +55,14 @@ func (server *Server) Start() {
 	userHandler := server.initUserHandler(userService)
 
 	server.startGrpcServer(userHandler)
+}
+
+func (server *Server) initChangePasswordOrchestrator(publisher saga.Publisher, subscriber saga.Subscriber) *service.ChangePasswordOrchestrator {
+	orchestrator, err := service.NewChangePasswordOrchestrator(publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return orchestrator
 }
 
 func (server *Server) initPublisher(subject string) saga.Publisher {
@@ -87,8 +107,8 @@ func (server *Server) initUserRepository(client *gorm.DB) *repository.UserReposi
 	return repository.NewUserRepository(client)
 }
 
-func (server *Server) initUserService(repo *repository.UserRepository) *service.UserService {
-	return service.NewUserService(repo)
+func (server *Server) initUserService(repo *repository.UserRepository, orchestrator *service.ChangePasswordOrchestrator) *service.UserService {
+	return service.NewUserService(repo, orchestrator)
 }
 
 func (server *Server) initUserHandler(service *service.UserService) *handler.UserHandler {

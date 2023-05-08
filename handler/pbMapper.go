@@ -35,13 +35,9 @@ func mapUserFromCreateUserRequest(user *pb.CreateUserRequest) model.User {
 }
 
 func mapPassword(passwordRequest *pb.ChangePasswordRequest) model.UserPassword {
-	userId, err := uuid.Parse(passwordRequest.Id)
-	if err != nil {
-		panic(err)
-	}
 
 	return model.UserPassword{
-		ID:          userId,
+		Email:       passwordRequest.Email,
 		NewPassword: passwordRequest.NewPassword,
 		OldPassword: passwordRequest.OldPassword,
 	}
