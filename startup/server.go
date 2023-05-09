@@ -40,7 +40,17 @@ func (server *Server) Start() {
 	replySubscriber := server.initSubscriber(server.config.ChangePasswordReplySubject, QueueGroup)
 	changePasswordOrchestrator := server.initChangePasswordOrchestrator(commandPublisher, replySubscriber)
 
-	userService := server.initUserService(userRepo, changePasswordOrchestrator)
+	//update user orchestrator
+	commandPublisher1 := server.initPublisher(server.config.UpdateUserCommandSubject)
+	replySubscriber1 := server.initSubscriber(server.config.UpdateUserReplySubject, QueueGroup)
+	updateUserOrchestrator := server.initUpdateUserOrchestrator(commandPublisher1, replySubscriber1)
+
+	userService := server.initUserService(userRepo, changePasswordOrchestrator, updateUserOrchestrator)
+
+	//update user
+	commandSubscriber2 := server.initSubscriber(server.config.UpdateUserCommandSubject, QueueGroup)
+	replyPublisher2 := server.initPublisher(server.config.UpdateUserReplySubject)
+	server.initUpdateUserHandler(userService, replyPublisher2, commandSubscriber2)
 
 	//change password
 	commandSubscriber1 := server.initSubscriber(server.config.ChangePasswordCommandSubject, QueueGroup)
@@ -55,6 +65,14 @@ func (server *Server) Start() {
 	userHandler := server.initUserHandler(userService)
 
 	server.startGrpcServer(userHandler)
+}
+
+func (server *Server) initUpdateUserOrchestrator(publisher saga.Publisher, subscriber saga.Subscriber) *service.UpdateUserOrchestrator {
+	orchestrator, err := service.NewUpdateUserOrchestrator(publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return orchestrator
 }
 
 func (server *Server) initChangePasswordOrchestrator(publisher saga.Publisher, subscriber saga.Subscriber) *service.ChangePasswordOrchestrator {
@@ -85,6 +103,13 @@ func (server *Server) initSubscriber(subject, queueGroup string) saga.Subscriber
 	return subscriber
 }
 
+func (server *Server) initUpdateUserHandler(service *service.UserService, publisher saga.Publisher, subscriber saga.Subscriber) {
+	_, err := handler.NewUpdateUserCommandHandler(service, publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (server *Server) initCreateUserHandler(service *service.UserService, publisher saga.Publisher, subscriber saga.Subscriber) {
 	_, err := handler.NewCreateUserCommandHandler(service, publisher, subscriber)
 	if err != nil {
@@ -107,8 +132,8 @@ func (server *Server) initUserRepository(client *gorm.DB) *repository.UserReposi
 	return repository.NewUserRepository(client)
 }
 
-func (server *Server) initUserService(repo *repository.UserRepository, orchestrator *service.ChangePasswordOrchestrator) *service.UserService {
-	return service.NewUserService(repo, orchestrator)
+func (server *Server) initUserService(repo *repository.UserRepository, changePassOrchestrator *service.ChangePasswordOrchestrator, updateUserOrchestrator *service.UpdateUserOrchestrator) *service.UserService {
+	return service.NewUserService(repo, changePassOrchestrator, updateUserOrchestrator)
 }
 
 func (server *Server) initUserHandler(service *service.UserService) *handler.UserHandler {

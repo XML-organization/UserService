@@ -55,3 +55,8 @@ type ChangeUserDTO struct {
 	Street   string    `json:"street" gorm:"not null;type:string"`
 	Number   string    `json:"number" gorm:"not null;type:string"`
 }
+
+type UpdateEmailDTO struct {
+	OldEmail string `json:"old_email"`
+	NewEmail string `json:"new_email"`
+}

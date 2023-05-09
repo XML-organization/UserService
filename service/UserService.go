@@ -4,27 +4,44 @@ import (
 	"user_service/model"
 	"user_service/repository"
 
+	events "github.com/XML-organization/common/saga/update_user"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	UserRepo     *repository.UserRepository
-	orchestrator *ChangePasswordOrchestrator
+	UserRepo               *repository.UserRepository
+	orchestrator           *ChangePasswordOrchestrator
+	updateUserOrchestrator *UpdateUserOrchestrator
 }
 
-func NewUserService(repo *repository.UserRepository, orchestrator *ChangePasswordOrchestrator) *UserService {
+func NewUserService(repo *repository.UserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
 	return &UserService{
-		UserRepo:     repo,
-		orchestrator: orchestrator,
+		UserRepo:               repo,
+		orchestrator:           orchestrator,
+		updateUserOrchestrator: updateUserOrchestrator,
 	}
 }
 
 func (service *UserService) UpdateUser(user model.ChangeUserDTO) (model.RequestMessage, error) {
+	loggedUser, err1 := service.UserRepo.FindById(user.ID)
+	if err1 != nil {
+		return model.RequestMessage{Message: "An error occurred, please try again!"}, err1
+	}
+
 	err := service.UserRepo.UpdateUser(user)
 	if err != nil {
 		return model.RequestMessage{Message: "An error occurred, please try again!"}, err
 	}
+
+	if loggedUser.Email != user.Email {
+		err2 := service.updateUserOrchestrator.Start(&events.UpdateUserDTO{OldEmail: loggedUser.Email, NewEmail: user.Email})
+		if err2 != nil {
+			service.UserRepo.ChangeEmail(model.UpdateEmailDTO{OldEmail: user.Email, NewEmail: loggedUser.Email})
+			return model.RequestMessage{Message: "An error occurred, please try again!"}, err2
+		}
+	}
+
 	return model.RequestMessage{Message: "Success!"}, nil
 }
 
@@ -99,4 +116,18 @@ func (service *UserService) CreateUser(user model.User) (model.RequestMessage, e
 	}
 
 	return response, nil
+}
+
+func (service *UserService) ChangeEmail(emails *model.UpdateEmailDTO) error {
+	_, err := service.UserRepo.FindByEmail(emails.OldEmail)
+	if err != nil {
+		return err
+	}
+
+	err1 := service.UserRepo.ChangeEmail(*emails)
+	if err1 != nil {
+		return err1
+	}
+
+	return nil
 }

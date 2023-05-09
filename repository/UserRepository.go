@@ -66,6 +66,21 @@ func (repo *UserRepository) ChangePassword(userPasswords model.UserPassword) (mo
 	return message, nil
 }
 
+func (repo *UserRepository) ChangeEmail(emails model.UpdateEmailDTO) error {
+
+	sqlStatementUser := `
+		UPDATE users
+		SET email = $2
+		WHERE email = $1;`
+
+	dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, emails.OldEmail, emails.NewEmail)
+
+	if dbResult1.Error != nil {
+		return dbResult1.Error
+	}
+	return nil
+}
+
 func (repo *UserRepository) FindById(id uuid.UUID) (model.User, error) {
 	user := model.User{}
 
@@ -91,15 +106,8 @@ func (repo *UserRepository) FindByEmail(email string) (model.User, error) {
 }
 
 func (repo *UserRepository) CreateUser(user model.User) (model.RequestMessage, error) {
-	println("usao sam u create user metodu u repozitorijumu")
-	println(user.Email)
-	//println(user.ID)
-	println(user.Password)
-	println(user.Country)
-	println("///////////////////////////////////////")
-	dbResult := repo.DatabaseConnection.Save(&user)
 
-	println("ISPOD create user metode u repozitorijumu")
+	dbResult := repo.DatabaseConnection.Save(&user)
 
 	if dbResult.Error != nil {
 		return model.RequestMessage{
