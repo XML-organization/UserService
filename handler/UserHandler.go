@@ -19,6 +19,19 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 	}
 }
 
+func (userHandler *UserHandler) GetUserByEmail(ctx context.Context, in *pb.GetUserByEmailRequest) (*pb.GetUserByEmailResponse, error) {
+	println("/////////////////////////////")
+	println("usao u metodu getuserbyemail")
+	user, err := userHandler.UserService.UserRepo.FindByEmail(in.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	println(user.ID.String())
+
+	return mapUserToGetUserByEmailResponse(&user), nil
+}
+
 func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
 
 	println("////////")

@@ -14,6 +14,7 @@ import (
 	"github.com/XML-organization/common/saga/messaging/nats"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 )
 
@@ -145,9 +146,13 @@ func (server *Server) startGrpcServer(userHandler *handler.UserHandler) {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	grpcServer := grpc.NewServer()
+	var opts []grpc.ServerOption
+	grpcServer := grpc.NewServer(opts...)
 	user.RegisterUserServiceServer(grpcServer, userHandler)
+	reflection.Register(grpcServer)
+	println("GRPC SERVER USPJESNO NAPRAVLJEN")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("failed to serve: %s", err)
+		println("GRPC SERVER NIJE USPJESNO NAPRAVLJEN")
 	}
 }

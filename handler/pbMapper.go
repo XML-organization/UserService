@@ -71,3 +71,21 @@ func mapUserFromUpdateUserRequest(user *pb.UpdateUserRequest) model.ChangeUserDT
 		Number:   user.Number,
 	}
 }
+
+func mapUserToGetUserByEmailResponse(user *model.User) *pb.GetUserByEmailResponse {
+
+	id := " |" + user.ID.String() + " |"
+	println(id)
+
+	return &pb.GetUserByEmailResponse{
+		Id:      id,
+		Email:   user.Email,
+		Role:    pb.Role(user.Role),
+		Name:    user.Name,
+		Surname: user.Surname,
+		Country: user.Country,
+		City:    user.City,
+		Street:  user.Street,
+		Number:  user.Number,
+	}
+}

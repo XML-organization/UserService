@@ -7,6 +7,8 @@ import (
 	events "github.com/XML-organization/common/saga/update_user"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserService struct {
@@ -54,6 +56,11 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 		NewPassword: userPasswords.NewPassword,
 	}
 
+	println("MJENJANJE SIFREE")
+	println("Email: " + passwords.Email)
+	println("Novi password: " + userPasswords.NewPassword)
+	println("Stari password: " + userPasswords.OldPassword)
+
 	if err != nil {
 		message := model.RequestMessage{
 			Message: "An error occurred, please try again!",
@@ -63,7 +70,7 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 		message := model.RequestMessage{
 			Message: "The old password is not correct!",
 		}
-		return message, err
+		return message, status.Error(codes.OK, "The old password is not correct!")
 	}
 
 	newPassword, _ := bcrypt.GenerateFromPassword([]byte(userPasswords.NewPassword), 14)
