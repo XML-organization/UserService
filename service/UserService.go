@@ -5,7 +5,6 @@ import (
 	"user_service/repository"
 
 	events "github.com/XML-organization/common/saga/update_user"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -100,13 +99,6 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 }
 
 func (service *UserService) CreateUser(user model.User) (model.RequestMessage, error) {
-
-	println("usao sam u create user metodu na user service strani")
-
-	id, _ := uuid.NewUUID()
-	user.ID = id
-
-	println("id usera: " + user.ID.String())
 
 	message, err := service.UserRepo.CreateUser(user)
 

@@ -5,12 +5,14 @@ import (
 
 	"user_service/service"
 
+	autentificationServicePb "github.com/XML-organization/common/proto/autentification_service"
 	pb "github.com/XML-organization/common/proto/user_service"
 )
 
 type UserHandler struct {
 	pb.UnimplementedUserServiceServer
-	UserService *service.UserService
+	UserService                  *service.UserService
+	AutentificationServiceClient *autentificationServicePb.AutentificationServiceClient
 }
 
 func NewUserHandler(service *service.UserService) *UserHandler {
@@ -20,8 +22,6 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (userHandler *UserHandler) GetUserByEmail(ctx context.Context, in *pb.GetUserByEmailRequest) (*pb.GetUserByEmailResponse, error) {
-	println("/////////////////////////////")
-	println("usao u metodu getuserbyemail")
 	user, err := userHandler.UserService.UserRepo.FindByEmail(in.Email)
 	if err != nil {
 		return nil, err
@@ -33,11 +33,6 @@ func (userHandler *UserHandler) GetUserByEmail(ctx context.Context, in *pb.GetUs
 }
 
 func (userHandler *UserHandler) UpdateUser(ctx context.Context, in *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
-
-	println("////////")
-	println(in.Email)
-	println(in.Id)
-
 	message, err := userHandler.UserService.UpdateUser(mapUserFromUpdateUserRequest(in))
 
 	return &pb.UpdateUserResponse{
