@@ -89,3 +89,13 @@ func mapUserToGetUserByEmailResponse(user *model.User) *pb.GetUserByEmailRespons
 		Number:  user.Number,
 	}
 }
+
+func mapUserFromDeleteUserRequest(id *pb.DeleteUserRequest) uuid.UUID {
+
+	userId, err := uuid.Parse(id.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	return userId
+}

@@ -119,3 +119,16 @@ func (repo *UserRepository) CreateUser(user model.User) (model.RequestMessage, e
 		Message: "Success!",
 	}, nil
 }
+
+func (repo *UserRepository) DeleteUserById(id uuid.UUID) (model.RequestMessage, error) {
+	dbResult := repo.DatabaseConnection.Delete(&model.User{}, id)
+	if dbResult.Error != nil {
+		return model.RequestMessage{
+			Message: "An error occured, please try again!",
+		}, dbResult.Error
+	}
+
+	return model.RequestMessage{
+		Message: "Success!",
+	}, nil
+}

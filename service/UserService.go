@@ -5,6 +5,7 @@ import (
 	"user_service/repository"
 
 	events "github.com/XML-organization/common/saga/update_user"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -129,4 +130,23 @@ func (service *UserService) ChangeEmail(emails *model.UpdateEmailDTO) error {
 	}
 
 	return nil
+}
+
+func (service *UserService) DeleteUser(id uuid.UUID) (model.RequestMessage, error) {
+
+	message, err := service.UserRepo.DeleteUserById(id)
+
+	if err != nil {
+		response := model.RequestMessage{
+			Message: "An error occured, please try again!",
+		}
+
+		return response, err
+	}
+
+	response := model.RequestMessage{
+		Message: message.Message,
+	}
+
+	return response, nil
 }

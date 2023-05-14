@@ -70,3 +70,16 @@ func (userHandler *UserHandler) Print(ctx context.Context, in *pb.PrintRequest) 
 		Message: in.Message,
 	}, nil
 }
+
+func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *pb.DeleteUserRequest) (*pb.DeleteResponseMessage, error) {
+
+	user := mapUserFromDeleteUserRequest(in)
+
+	message, err := userHandler.UserService.DeleteUser(user)
+
+	response := pb.DeleteResponseMessage{
+		Message: message.Message,
+	}
+
+	return &response, err
+}
