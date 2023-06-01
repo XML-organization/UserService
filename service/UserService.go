@@ -5,7 +5,6 @@ import (
 	"user_service/repository"
 
 	events "github.com/XML-organization/common/saga/update_user"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -132,9 +131,11 @@ func (service *UserService) ChangeEmail(emails *model.UpdateEmailDTO) error {
 	return nil
 }
 
-func (service *UserService) DeleteUser(id uuid.UUID) (model.RequestMessage, error) {
-
-	message, err := service.UserRepo.DeleteUserById(id)
+func (service *UserService) DeleteUser(email string) (model.RequestMessage, error) {
+	user, err := service.UserRepo.FindByEmail(email)
+	println("front email---" + email)
+	println("user email---" + user.Email)
+	message, err := service.UserRepo.DeleteUserById(user.ID)
 
 	if err != nil {
 		response := model.RequestMessage{

@@ -2,11 +2,14 @@ package handler
 
 import (
 	"context"
+	"log"
 
 	"user_service/service"
 
 	autentificationServicePb "github.com/XML-organization/common/proto/autentification_service"
 	pb "github.com/XML-organization/common/proto/user_service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type UserHandler struct {
@@ -72,13 +75,22 @@ func (userHandler *UserHandler) Print(ctx context.Context, in *pb.PrintRequest) 
 }
 
 func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *pb.DeleteUserRequest) (*pb.DeleteResponseMessage, error) {
+	conn, err := grpc.Dial("autentification_service:8000", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
 
-	user := mapUserFromDeleteUserRequest(in)
+	aService := autentificationServicePb.NewAutentificationServiceClient(conn)
 
-	message, err := userHandler.UserService.DeleteUser(user)
-
+	_, err1 := userHandler.UserService.DeleteUser(in.Id)
+	_, err2 := aService.DeleteUser(context.TODO(), &autentificationServicePb.DeleteUserRequest{Email: in.Id})
+	if err1 != nil {
+		println(err1.Error())
+		println(err2.Error())
+	}
 	response := pb.DeleteResponseMessage{
-		Message: message.Message,
+		Message: "ok",
 	}
 
 	return &response, err
