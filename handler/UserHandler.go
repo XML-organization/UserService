@@ -8,6 +8,7 @@ import (
 
 	autentificationServicePb "github.com/XML-organization/common/proto/autentification_service"
 	pb "github.com/XML-organization/common/proto/user_service"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -15,12 +16,14 @@ import (
 type UserHandler struct {
 	pb.UnimplementedUserServiceServer
 	UserService                  *service.UserService
+	RatingService                *service.RatingService
 	AutentificationServiceClient *autentificationServicePb.AutentificationServiceClient
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
+func NewUserHandler(service *service.UserService, ratingService *service.RatingService) *UserHandler {
 	return &UserHandler{
-		UserService: service,
+		UserService:   service,
+		RatingService: ratingService,
 	}
 }
 
@@ -64,6 +67,41 @@ func (userHandler *UserHandler) CreateUser(ctx context.Context, in *pb.CreateUse
 	return &response, err
 }
 
+func (userHandler *UserHandler) CreateRating(ctx context.Context, in *pb.CreateRatingRequest) (*pb.CreateRatingResponse, error) {
+
+	rating := mapRating(in)
+
+	message, err := userHandler.RatingService.CreateRating(rating)
+
+	response := pb.CreateRatingResponse{
+		Message: message.Message,
+	}
+
+	return &response, err
+}
+
+// WasGuestRatedHost
+func (userHandler *UserHandler) WasGuestRatedHost(ctx context.Context, in *pb.WasGuestRatedHostRequest) (*pb.WasGuestRatedHostResponse, error) {
+
+	HostId, err := uuid.Parse(in.HostId)
+	if err != nil {
+		panic(err)
+	}
+
+	GuestId, err := uuid.Parse(in.GuestId)
+	if err != nil {
+		panic(err)
+	}
+
+	wasRated, err := userHandler.RatingService.WasGuestRatedHost(HostId, GuestId)
+
+	response := pb.WasGuestRatedHostResponse{
+		WasRated: wasRated,
+	}
+
+	return &response, err
+}
+
 func (userHandler *UserHandler) Print(ctx context.Context, in *pb.PrintRequest) (*pb.PrintResponse, error) {
 	println("adasdasdasdas")
 
@@ -94,4 +132,32 @@ func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *pb.DeleteUse
 	}
 
 	return &response, err
+}
+
+func (ratingHandler *UserHandler) DeleteRating(ctx context.Context, in *pb.DeleteRatingRequest) (*pb.DeleteRatingResponse, error) {
+	message, err := ratingHandler.RatingService.DeleteRating(in.HostId, in.GuestId)
+
+	if err != nil {
+		return &pb.DeleteRatingResponse{
+			Message: "An error occured, please try again!",
+		}, err
+	}
+
+	return &pb.DeleteRatingResponse{
+		Message: message.Message,
+	}, nil
+}
+
+func (ratingHandler *UserHandler) UpdateRating(ctx context.Context, in *pb.UpdateRatingRequest) (*pb.UpdateRatingResponse, error) {
+	message, err := ratingHandler.RatingService.UpdateRating(in.HostId, in.GuestId, int(in.Rating))
+
+	if err != nil {
+		return &pb.UpdateRatingResponse{
+			Message: "An error occured, please try again!",
+		}, err
+	}
+
+	return &pb.UpdateRatingResponse{
+		Message: message.Message,
+	}, nil
 }

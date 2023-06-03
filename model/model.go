@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -15,6 +17,16 @@ type User struct {
 	City     string    `json:"city" gorm:"not null;type:string"`
 	Street   string    `json:"street" gorm:"not null;type:string"`
 	Number   string    `json:"number" gorm:"not null;type:string"`
+}
+
+type Rating struct {
+	Id           uuid.UUID `json:"id"`
+	Rating       int       `json:"rating"`
+	Date         time.Time `json:"date"`
+	RaterID      uuid.UUID `json:"rater_id"`
+	RaterName    string    `json:"rater_name"`
+	RaterSurname string    `json:"rater_surname"`
+	UserId       uuid.UUID `json:"user_id"`
 }
 
 type Role int

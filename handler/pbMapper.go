@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"time"
 	"user_service/model"
 
 	pb "github.com/XML-organization/common/proto/user_service"
@@ -31,6 +32,37 @@ func mapUserFromCreateUserRequest(user *pb.CreateUserRequest) model.User {
 		City:     user.City,
 		Street:   user.Street,
 		Number:   user.Number,
+	}
+}
+
+func mapRating(r *pb.CreateRatingRequest) model.Rating {
+	id := uuid.New()
+
+	reterId, err := uuid.Parse(r.RaterId)
+	if err != nil {
+		panic(err)
+	}
+
+	userId, err := uuid.Parse(r.UserId)
+	if err != nil {
+		panic(err)
+	}
+
+	layout := "2006-01-02"
+
+	date, err := time.Parse(layout, r.Date)
+	if err != nil {
+		panic(err)
+	}
+
+	return model.Rating{
+		Id:           id,
+		Rating:       int(r.Rating),
+		RaterID:      reterId,
+		RaterName:    r.RaterName,
+		RaterSurname: r.RaterSurname,
+		UserId:       userId,
+		Date:         date,
 	}
 }
 

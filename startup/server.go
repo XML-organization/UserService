@@ -35,6 +35,7 @@ const (
 func (server *Server) Start() {
 	postgresClient := server.initPostgresClient()
 	userRepo := server.initUserRepository(postgresClient)
+	ratingRepo := server.initRatingRepository(postgresClient)
 
 	//change password orchestrator
 	commandPublisher := server.initPublisher(server.config.ChangePasswordCommandSubject)
@@ -47,6 +48,7 @@ func (server *Server) Start() {
 	updateUserOrchestrator := server.initUpdateUserOrchestrator(commandPublisher1, replySubscriber1)
 
 	userService := server.initUserService(userRepo, changePasswordOrchestrator, updateUserOrchestrator)
+	ratingService := server.initRatingService(ratingRepo)
 
 	//update user
 	commandSubscriber2 := server.initSubscriber(server.config.UpdateUserCommandSubject, QueueGroup)
@@ -63,7 +65,7 @@ func (server *Server) Start() {
 	replyPublisher := server.initPublisher(server.config.CreateUserReplySubject)
 	server.initCreateUserHandler(userService, replyPublisher, commandSubscriber)
 
-	userHandler := server.initUserHandler(userService)
+	userHandler := server.initUserHandler(userService, ratingService)
 
 	server.startGrpcServer(userHandler)
 }
@@ -133,12 +135,20 @@ func (server *Server) initUserRepository(client *gorm.DB) *repository.UserReposi
 	return repository.NewUserRepository(client)
 }
 
+func (server *Server) initRatingRepository(client *gorm.DB) *repository.RatingRepository {
+	return repository.NewRatingRepository(client)
+}
+
 func (server *Server) initUserService(repo *repository.UserRepository, changePassOrchestrator *service.ChangePasswordOrchestrator, updateUserOrchestrator *service.UpdateUserOrchestrator) *service.UserService {
 	return service.NewUserService(repo, changePassOrchestrator, updateUserOrchestrator)
 }
 
-func (server *Server) initUserHandler(service *service.UserService) *handler.UserHandler {
-	return handler.NewUserHandler(service)
+func (server *Server) initRatingService(repo *repository.RatingRepository) *service.RatingService {
+	return service.NewRatingService(repo)
+}
+
+func (server *Server) initUserHandler(service *service.UserService, ratingService *service.RatingService) *handler.UserHandler {
+	return handler.NewUserHandler(service, ratingService)
 }
 
 func (server *Server) startGrpcServer(userHandler *handler.UserHandler) {
