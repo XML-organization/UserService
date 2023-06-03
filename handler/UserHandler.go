@@ -161,3 +161,31 @@ func (ratingHandler *UserHandler) UpdateRating(ctx context.Context, in *pb.Updat
 		Message: message.Message,
 	}, nil
 }
+
+func (ratingHandler *UserHandler) GetHostRatings(ctx context.Context, in *pb.GetHostRatingsRequest) (*pb.GetHostRatingsResponse, error) {
+	ratings, err := ratingHandler.RatingService.GetHostRatings(in.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Konvertiranje rezultata ocjena u odgovarajući format protobuf-a
+	var pbRatings []*pb.Rating
+	for _, rating := range ratings {
+		pbRating := &pb.Rating{
+			Id:           rating.Id.String(),
+			Rating:       int32(rating.Rating),
+			Date:         rating.Date.Format("2006-01-02"),
+			RaterId:      rating.RaterID.String(),
+			RaterName:    rating.RaterName,
+			RaterSurname: rating.RaterSurname,
+			UserId:       rating.UserId.String(),
+		}
+		pbRatings = append(pbRatings, pbRating)
+	}
+
+	response := &pb.GetHostRatingsResponse{
+		Ratings: pbRatings,
+	}
+
+	return response, nil
+}

@@ -99,3 +99,11 @@ func (repo *RatingRepository) UpdateRating(hostId string, guestId string, newRat
 		Message: "Rating updated successfully!",
 	}, nil
 }
+func (repo *RatingRepository) GetHostRatings(hostId string) ([]model.Rating, error) {
+	var ratings []model.Rating
+	err := repo.DatabaseConnection.Where("user_id = ?", hostId).Find(&ratings).Error
+	if err != nil {
+		return nil, err
+	}
+	return ratings, nil
+}

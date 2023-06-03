@@ -68,3 +68,14 @@ func (service *RatingService) UpdateRating(hostID string, guestID string, rating
 
 	return message, nil
 }
+
+func (service *RatingService) GetHostRatings(hostID string) ([]model.Rating, error) {
+
+	ratings, err := service.RatingRepo.GetHostRatings(hostID)
+
+	if err != nil {
+		return ratings, err
+	}
+
+	return ratings, nil
+}
