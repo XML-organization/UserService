@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"user_service/model"
 	"user_service/repository"
 
@@ -27,17 +28,20 @@ func NewUserService(repo *repository.UserRepository, orchestrator *ChangePasswor
 func (service *UserService) UpdateUser(user model.ChangeUserDTO) (model.RequestMessage, error) {
 	loggedUser, err1 := service.UserRepo.FindById(user.ID)
 	if err1 != nil {
+		log.Println(err1)
 		return model.RequestMessage{Message: "An error occurred, please try again!"}, err1
 	}
 
 	err := service.UserRepo.UpdateUser(user)
 	if err != nil {
+		log.Println(err)
 		return model.RequestMessage{Message: "An error occurred, please try again!"}, err
 	}
 
 	if loggedUser.Email != user.Email {
 		err2 := service.updateUserOrchestrator.Start(&events.UpdateUserDTO{OldEmail: loggedUser.Email, NewEmail: user.Email})
 		if err2 != nil {
+			log.Println(err2)
 			service.UserRepo.ChangeEmail(model.UpdateEmailDTO{OldEmail: user.Email, NewEmail: loggedUser.Email})
 			return model.RequestMessage{Message: "An error occurred, please try again!"}, err2
 		}
@@ -61,11 +65,13 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 	println("Stari password: " + userPasswords.OldPassword)
 
 	if err != nil {
+		log.Println(err)
 		message := model.RequestMessage{
 			Message: "An error occurred, please try again!",
 		}
 		return message, err
 	} else if err := bcrypt.CompareHashAndPassword(user.Password, []byte(userPasswords.OldPassword)); err != nil {
+		log.Println(err)
 		message := model.RequestMessage{
 			Message: "The old password is not correct!",
 		}
@@ -77,6 +83,7 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 
 	message, err := service.UserRepo.ChangePassword(userPasswords)
 	if err != nil {
+		log.Println(err)
 		message := model.RequestMessage{
 			Message: message.Message,
 		}
@@ -85,6 +92,7 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 
 	err1 := service.orchestrator.Start(&passwords)
 	if err1 != nil {
+		log.Println(err1)
 		service.UserRepo.ChangePassword(*mapRollbackChangePasswordDTO(&userPasswords))
 		message := model.RequestMessage{
 			Message: "An error occured, please try again!",
@@ -103,6 +111,7 @@ func (service *UserService) CreateUser(user model.User) (model.RequestMessage, e
 	message, err := service.UserRepo.CreateUser(user)
 
 	if err != nil {
+		log.Println(err)
 		response := model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}
@@ -120,11 +129,13 @@ func (service *UserService) CreateUser(user model.User) (model.RequestMessage, e
 func (service *UserService) ChangeEmail(emails *model.UpdateEmailDTO) error {
 	_, err := service.UserRepo.FindByEmail(emails.OldEmail)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	err1 := service.UserRepo.ChangeEmail(*emails)
 	if err1 != nil {
+		log.Println(err1)
 		return err1
 	}
 
@@ -138,6 +149,7 @@ func (service *UserService) DeleteUser(email string) (model.RequestMessage, erro
 	message, err := service.UserRepo.DeleteUserById(user.ID)
 
 	if err != nil {
+		log.Println(err)
 		response := model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"user_service/model"
 	"user_service/service"
 
@@ -22,6 +23,7 @@ func NewChangePasswordCommandHandler(userService *service.UserService, publisher
 	}
 	err := o.commandSubscriber.Subscribe(o.handle)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return o, nil
@@ -30,22 +32,22 @@ func NewChangePasswordCommandHandler(userService *service.UserService, publisher
 func (handler *ChangePasswordCommandHandler) handle(command *events.ChangePasswordCommand) {
 	reply := events.ChangePasswordReply{ChangePasswordDTO: command.ChagePasswordDTO}
 
-	println("ChangePassword: Usao sam u handle metodu na User service strani")
-	println("Ovo je tip comande koju sam dobio: %v", command.Type)
+	log.Println("ChangePassword: Usao sam u handle metodu na User service strani")
+	log.Println("Ovo je tip comande koju sam dobio:", command.Type)
 
 	switch command.Type {
 	case events.PrintSuccessful:
-		println("Saga (User servise side): User password changed successfuly!")
+		log.Println("Saga (User servise side): User password changed successfuly!")
 		reply.Type = events.SuccessfulyFinished
 	case events.RollbackPassword:
 		_, err := handler.userService.ChangePassword(model.UserPassword{Email: command.ChagePasswordDTO.Email,
 			OldPassword: command.ChagePasswordDTO.OldPassword,
 			NewPassword: command.ChagePasswordDTO.NewPassword})
 		if err != nil {
-			println("nisam uspjesno obrisao usera")
+			log.Println("nisam uspjesno obrisao usera")
 			return
 		}
-		println("Saga (User servise side): User old user password returned successfuly!")
+		log.Println("Saga (User servise side): User old user password returned successfuly!")
 		reply.Type = events.OldPasswordReturned
 	default:
 		reply.Type = events.UnknownReply

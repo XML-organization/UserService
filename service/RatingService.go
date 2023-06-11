@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"user_service/model"
 	"user_service/repository"
 
@@ -22,6 +23,7 @@ func (service *RatingService) CreateRating(rating model.Rating) (model.RequestMe
 	message, err := service.RatingRepo.CreateRating(rating)
 
 	if err != nil {
+		log.Println(err)
 		response := model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}
@@ -41,6 +43,7 @@ func (service *RatingService) WasGuestRatedHost(hostID uuid.UUID, guestID uuid.U
 	wasRated, err := service.RatingRepo.WasGuestRatedHost(hostID, guestID)
 
 	if err != nil {
+		log.Println(err)
 		return false, err
 	}
 
@@ -52,6 +55,7 @@ func (service *RatingService) DeleteRating(hostID string, guestID string) (model
 	message, err := service.RatingRepo.DeleteRating(hostID, guestID)
 
 	if err != nil {
+		log.Println(err)
 		return message, err
 	}
 
@@ -63,6 +67,7 @@ func (service *RatingService) UpdateRating(hostID string, guestID string, rating
 	message, err := service.RatingRepo.UpdateRating(hostID, guestID, rating)
 
 	if err != nil {
+		log.Println(err)
 		return message, err
 	}
 
@@ -74,6 +79,7 @@ func (service *RatingService) GetHostRatings(hostID string) ([]model.Rating, err
 	ratings, err := service.RatingRepo.GetHostRatings(hostID)
 
 	if err != nil {
+		log.Println(err)
 		return ratings, err
 	}
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strings"
 	"user_service/model"
 
@@ -13,10 +14,11 @@ func mapSagaUserToUser(u *events.User) *model.User {
 
 	println(u.Id)
 	idString := strings.Split(u.Id, " |")[1]
-	println("OVDJE MAPIRAM STRING ID U UUID")
-	println("ID: " + idString)
+	log.Println("OVDJE MAPIRAM STRING ID U UUID")
+	log.Println("ID: " + idString)
 	id, err := uuid.Parse(idString)
 	if err != nil {
+		log.Println(err)
 		return nil
 	}
 
