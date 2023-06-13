@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"user_service/model"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ type UserRepository struct {
 func NewUserRepository(db *gorm.DB) *UserRepository {
 	err := db.AutoMigrate(&model.User{}, &model.Address{})
 	if err != nil {
+		log.Println(err)
 		return nil
 	}
 
@@ -38,6 +40,7 @@ func (repo *UserRepository) UpdateUser(user model.ChangeUserDTO) error {
 	dbResult := repo.DatabaseConnection.Exec(sqlStatementUser, user.ID, user.Name, user.Surname, user.Email, user.Country, user.City, user.Street, user.Number)
 
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return dbResult.Error
 	}
 
@@ -54,6 +57,7 @@ func (repo *UserRepository) ChangePassword(userPasswords model.UserPassword) (mo
 	dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, userPasswords.Email, userPasswords.NewPassword)
 
 	if dbResult1.Error != nil {
+		log.Println(dbResult1.Error)
 		message := model.RequestMessage{
 			Message: "An error occurred, please try again!",
 		}
@@ -76,6 +80,7 @@ func (repo *UserRepository) ChangeEmail(emails model.UpdateEmailDTO) error {
 	dbResult1 := repo.DatabaseConnection.Exec(sqlStatementUser, emails.OldEmail, emails.NewEmail)
 
 	if dbResult1.Error != nil {
+		log.Println(dbResult1.Error)
 		return dbResult1.Error
 	}
 	return nil
@@ -87,6 +92,7 @@ func (repo *UserRepository) FindById(id uuid.UUID) (model.User, error) {
 	dbResult := repo.DatabaseConnection.First(&user, "id = ?", id)
 
 	if dbResult != nil {
+		log.Println(dbResult.Error)
 		return user, dbResult.Error
 	}
 
@@ -99,6 +105,7 @@ func (repo *UserRepository) FindByEmail(email string) (model.User, error) {
 	dbResult := repo.DatabaseConnection.First(&user, "email = ?", email)
 
 	if dbResult != nil {
+		log.Println(dbResult.Error)
 		return user, dbResult.Error
 	}
 
@@ -110,6 +117,7 @@ func (repo *UserRepository) CreateUser(user model.User) (model.RequestMessage, e
 	dbResult := repo.DatabaseConnection.Save(&user)
 
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}, dbResult.Error
@@ -123,6 +131,7 @@ func (repo *UserRepository) CreateUser(user model.User) (model.RequestMessage, e
 func (repo *UserRepository) DeleteUserById(id uuid.UUID) (model.RequestMessage, error) {
 	dbResult := repo.DatabaseConnection.Delete(&model.User{}, id)
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}, dbResult.Error

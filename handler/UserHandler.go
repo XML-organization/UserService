@@ -30,6 +30,7 @@ func NewUserHandler(service *service.UserService, ratingService *service.RatingS
 func (userHandler *UserHandler) GetUserByEmail(ctx context.Context, in *pb.GetUserByEmailRequest) (*pb.GetUserByEmailResponse, error) {
 	user, err := userHandler.UserService.UserRepo.FindByEmail(in.Email)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -85,12 +86,12 @@ func (userHandler *UserHandler) WasGuestRatedHost(ctx context.Context, in *pb.Wa
 
 	HostId, err := uuid.Parse(in.HostId)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	GuestId, err := uuid.Parse(in.GuestId)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	wasRated, err := userHandler.RatingService.WasGuestRatedHost(HostId, GuestId)
@@ -124,6 +125,8 @@ func (userHandler *UserHandler) DeleteUser(ctx context.Context, in *pb.DeleteUse
 	_, err1 := userHandler.UserService.DeleteUser(in.Id)
 	_, err2 := aService.DeleteUser(context.TODO(), &autentificationServicePb.DeleteUserRequest{Email: in.Id})
 	if err1 != nil {
+		log.Println(err1)
+		log.Println(err2)
 		println(err1.Error())
 		println(err2.Error())
 	}
@@ -138,6 +141,7 @@ func (ratingHandler *UserHandler) DeleteRating(ctx context.Context, in *pb.Delet
 	message, err := ratingHandler.RatingService.DeleteRating(in.HostId, in.GuestId)
 
 	if err != nil {
+		log.Println(err)
 		return &pb.DeleteRatingResponse{
 			Message: "An error occured, please try again!",
 		}, err
@@ -152,6 +156,7 @@ func (ratingHandler *UserHandler) UpdateRating(ctx context.Context, in *pb.Updat
 	message, err := ratingHandler.RatingService.UpdateRating(in.HostId, in.GuestId, int(in.Rating))
 
 	if err != nil {
+		log.Println(err)
 		return &pb.UpdateRatingResponse{
 			Message: "An error occured, please try again!",
 		}, err
@@ -165,6 +170,7 @@ func (ratingHandler *UserHandler) UpdateRating(ctx context.Context, in *pb.Updat
 func (ratingHandler *UserHandler) GetHostRatings(ctx context.Context, in *pb.GetHostRatingsRequest) (*pb.GetHostRatingsResponse, error) {
 	ratings, err := ratingHandler.RatingService.GetHostRatings(in.UserId)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 

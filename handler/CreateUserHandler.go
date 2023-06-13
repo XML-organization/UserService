@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"user_service/service"
 
 	events "github.com/XML-organization/common/saga/create_user"
@@ -21,6 +22,7 @@ func NewCreateUserCommandHandler(userService *service.UserService, publisher sag
 	}
 	err := o.commandSubscriber.Subscribe(o.handle)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return o, nil
@@ -29,8 +31,8 @@ func NewCreateUserCommandHandler(userService *service.UserService, publisher sag
 func (handler *CreateUserCommandHandler) handle(command *events.CreateUserCommand) {
 	reply := events.CreateUserReply{User: command.User}
 
-	println("Usao sam u handle metodu na User service strani")
-	println("Ovo je tip comande koju sam dobio: %v", command.Type)
+	log.Println("Usao sam u handle metodu na User service strani")
+	log.Println("Ovo je tip comande koju sam dobio:", command.Type)
 
 	switch command.Type {
 	case events.SaveUser:
@@ -38,10 +40,10 @@ func (handler *CreateUserCommandHandler) handle(command *events.CreateUserComman
 		_, err := handler.userService.CreateUser(*user)
 		if err != nil {
 			reply.Type = events.UserNotSaved
-			println("Saga: User dont created successfuly!")
+			log.Println("Saga: User dont created successfuly!")
 			break
 		}
-		println("Saga: User created successfuly!")
+		log.Println("Saga: User created successfuly!")
 		reply.Type = events.UserSaved
 	default:
 		reply.Type = events.UnknownReply

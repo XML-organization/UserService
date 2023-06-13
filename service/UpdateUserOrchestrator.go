@@ -1,6 +1,8 @@
 package service
 
 import (
+	"log"
+
 	saga "github.com/XML-organization/common/saga/messaging"
 	events "github.com/XML-organization/common/saga/update_user"
 )
@@ -17,6 +19,7 @@ func NewUpdateUserOrchestrator(publisher saga.Publisher, subscriber saga.Subscri
 	}
 	err := o.replySubscriber.Subscribe(o.handle)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return o, nil
@@ -43,10 +46,10 @@ func (o *UpdateUserOrchestrator) nextCommandType(reply events.UpdateUserReplyTyp
 
 	switch reply {
 	case events.UserUpdated:
-		println("Event: UserUpdated")
+		log.Println("Event: UserUpdated")
 		return events.PrintSuccessful
 	case events.UserNotUpdated:
-		println("Event: UserNotUpdated")
+		log.Println("Event: UserNotUpdated")
 		return events.RollbackEmail
 	default:
 		return events.UnknownCommand

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"time"
 	"user_service/model"
 
@@ -16,7 +17,7 @@ func mapUserFromCreateUserRequest(user *pb.CreateUserRequest) model.User {
 
 	userId, err := uuid.Parse(user.Id)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	password, _ := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
@@ -40,19 +41,19 @@ func mapRating(r *pb.CreateRatingRequest) model.Rating {
 
 	reterId, err := uuid.Parse(r.RaterId)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	userId, err := uuid.Parse(r.UserId)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	layout := "2006-01-02"
 
 	date, err := time.Parse(layout, r.Date)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	return model.Rating{
@@ -87,7 +88,7 @@ func mapAddress(a *pb.Address) model.Address {
 func mapUserFromUpdateUserRequest(user *pb.UpdateUserRequest) model.ChangeUserDTO {
 	userId, err := uuid.Parse(user.Id)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	return model.ChangeUserDTO{
@@ -126,7 +127,7 @@ func mapUserFromDeleteUserRequest(id *pb.DeleteUserRequest) uuid.UUID {
 
 	userId, err := uuid.Parse(id.Id)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	return userId
