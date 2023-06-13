@@ -12,13 +12,15 @@ import (
 
 type UserService struct {
 	UserRepo               *repository.UserRepository
+	UserNeo4jRepo          *repository.Neo4jUserRepository
 	orchestrator           *ChangePasswordOrchestrator
 	updateUserOrchestrator *UpdateUserOrchestrator
 }
 
-func NewUserService(repo *repository.UserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
+func NewUserService(repo *repository.UserRepository, neo4jRepo *repository.Neo4jUserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
 	return &UserService{
 		UserRepo:               repo,
+		UserNeo4jRepo:          neo4jRepo,
 		orchestrator:           orchestrator,
 		updateUserOrchestrator: updateUserOrchestrator,
 	}
@@ -100,7 +102,14 @@ func (service *UserService) ChangePassword(userPasswords model.UserPassword) (mo
 
 func (service *UserService) CreateUser(user model.User) (model.RequestMessage, error) {
 
+	println("USAO U METODU CREATE USER U SERVICE")
+
 	message, err := service.UserRepo.CreateUser(user)
+	err1 := service.UserNeo4jRepo.SaveUser(user.ID.String())
+
+	if err1 != nil {
+		println("nisam uspio upisati usera u neo4j bazu")
+	}
 
 	if err != nil {
 		response := model.RequestMessage{
