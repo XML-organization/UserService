@@ -7,6 +7,7 @@ import (
 	"user_service/service"
 
 	autentificationServicePb "github.com/XML-organization/common/proto/autentification_service"
+	bookingServicePb "github.com/XML-organization/common/proto/booking_service"
 	pb "github.com/XML-organization/common/proto/user_service"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -18,6 +19,7 @@ type UserHandler struct {
 	UserService                  *service.UserService
 	RatingService                *service.RatingService
 	AutentificationServiceClient *autentificationServicePb.AutentificationServiceClient
+	BookingServiceClient         *bookingServicePb.BookingServiceClient
 }
 
 func NewUserHandler(service *service.UserService, ratingService *service.RatingService) *UserHandler {
@@ -66,6 +68,60 @@ func (userHandler *UserHandler) CreateUser(ctx context.Context, in *pb.CreateUse
 	}
 
 	return &response, err
+}
+
+func (ratingHandler *UserHandler) IsExceptional(ctx context.Context, in *pb.IsExceptionalRequest) (*pb.IsExceptionalResponse, error) {
+	ratings, err := ratingHandler.RatingService.GetHostRatings(in.UserId)
+	println("HostID: ", in.UserId)
+	log.Println("HostID: ", in.UserId)
+
+	//Provjera prosjecne ocjene host-a
+	var ratingSum float64 = 0
+	var i float64 = 0
+	var threshold float64 = 4.7
+	for _, rating := range ratings {
+		println("Trenutna rating suma: ", ratingSum)
+		ratingSum = ratingSum + float64(rating.Rating)
+		i = i + 1
+	}
+	var rating float64 = ratingSum / i
+	println("Rating suma: ", rating)
+	println("Rating za ovog hosta je: ")
+	if rating <= threshold {
+		response := pb.IsExceptionalResponse{
+			IsExceptional: true,
+		}
+		println("Rating je nizi od 4.7!")
+		return &response, err
+	}
+
+	println("Rating je visi od 4.7!")
+	//Provjeravam broj i duzinu rezervacija
+	conn, err := grpc.Dial("booking-service:8000", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	bookingService := bookingServicePb.NewBookingServiceClient(conn)
+	isExceptional, err := bookingService.IsExceptional(context.TODO(), &bookingServicePb.IsExceptionalRequest{UserId: in.UserId})
+	if err != nil {
+		log.Println(err)
+		println(err.Error())
+		return nil, err
+	}
+
+	if isExceptional.IsExceptional == false {
+		response := pb.IsExceptionalResponse{
+			IsExceptional: false,
+		}
+		return &response, err
+	} else {
+		response := pb.IsExceptionalResponse{
+			IsExceptional: true,
+		}
+		return &response, err
+	}
 }
 
 func (userHandler *UserHandler) CreateRating(ctx context.Context, in *pb.CreateRatingRequest) (*pb.CreateRatingResponse, error) {
