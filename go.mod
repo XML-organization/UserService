@@ -6,8 +6,8 @@ replace github.com/XML-organization/common => ../common
 
 require (
 	github.com/XML-organization/common v1.0.1-0.20230505091723-07badc01f120
-	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/google/uuid v1.3.0
+	github.com/neo4j/neo4j-go-driver v1.8.3
 	golang.org/x/crypto v0.8.0
 	google.golang.org/grpc v1.54.0
 	gorm.io/driver/postgres v1.5.0
