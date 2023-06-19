@@ -6,6 +6,7 @@ import (
 	"user_service/repository"
 
 	events "github.com/XML-organization/common/saga/update_user"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,14 +14,16 @@ import (
 
 type UserService struct {
 	UserRepo               *repository.UserRepository
+	NotificationRepo       *repository.NotificationRepository
 	UserNeo4jRepo          *repository.Neo4jUserRepository
 	orchestrator           *ChangePasswordOrchestrator
 	updateUserOrchestrator *UpdateUserOrchestrator
 }
 
-func NewUserService(repo *repository.UserRepository, neo4jRepo *repository.Neo4jUserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
+func NewUserService(repo *repository.UserRepository, notrepo *repository.NotificationRepository, neo4jRepo *repository.Neo4jUserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
 	return &UserService{
 		UserRepo:               repo,
+		NotificationRepo:       notrepo,
 		UserNeo4jRepo:          neo4jRepo,
 		orchestrator:           orchestrator,
 		updateUserOrchestrator: updateUserOrchestrator,
@@ -171,4 +174,29 @@ func (service *UserService) DeleteUser(email string) (model.RequestMessage, erro
 	}
 
 	return response, nil
+}
+
+func (service *UserService) Save(notification *model.Notification) (model.RequestMessage, error) {
+	response := model.RequestMessage{
+		Message: service.NotificationRepo.Save(notification).Message,
+	}
+	return response, nil
+}
+
+func (service *UserService) GetAllByUserID(userID uuid.UUID) ([]model.Notification, error) {
+	accomodations, err := service.NotificationRepo.GetAllByUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return accomodations, nil
+}
+
+func (service *UserService) UpdateStatusByID(notificationID uuid.UUID, status model.NotificationStatus) error {
+	err := service.NotificationRepo.UpdateStatusByID(notificationID, status)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }

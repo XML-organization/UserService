@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"user_service/model"
 	"user_service/service"
 
 	autentificationServicePb "github.com/XML-organization/common/proto/autentification_service"
@@ -250,4 +251,76 @@ func (ratingHandler *UserHandler) GetHostRatings(ctx context.Context, in *pb.Get
 	}
 
 	return response, nil
+}
+
+func (handler *UserHandler) GetAllNotificationsForUser(ctx context.Context, request *pb.GetAllRequest) (*pb.GetAllResponse, error) {
+	println("Usao u NotificationHandler.GetAllByUserID-----")
+	userID, err := uuid.Parse(request.UserID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	println("UserID u Notification Servicu poslije parsiranja: ", userID.String())
+
+	notifications, err := handler.UserService.GetAllByUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	print("Lista koja je ucitana iz baze")
+	println("Dugacka je: ", len(notifications))
+	for j, tmp := range notifications {
+		println(j, ". Notification: ", tmp.Text)
+	}
+
+	response := &pb.GetAllResponse{
+		Notifications: []*pb.SaveRequest{},
+	}
+
+	for _, notification := range notifications {
+		current := mapSaveNotificationFromNotification(&notification)
+		response.Notifications = append(response.Notifications, current)
+	}
+
+	println("Notifications koje vraca Notifications Servis:")
+	println("Dugacka je: ", len(response.Notifications))
+
+	for j, tmp := range response.Notifications {
+		println(j, ". Notifications: ", tmp.Text)
+	}
+
+	return response, nil
+}
+
+func (handler *UserHandler) SaveNotification(ctx context.Context, request *pb.SaveRequest) (*pb.SaveResponse, error) {
+	println("U ovom obliku sam primio zahtjev za cuvanje obavjestenje:")
+	println("id: ", request.Id)
+	println("userid: ", request.UserID)
+	println("text: ", request.Text)
+	notification := mapNotificationFromSaveNotification(request)
+	message, err := handler.UserService.Save(&notification)
+	if err != nil {
+		log.Println(err)
+	}
+	response := pb.SaveResponse{
+		Message: message.Message,
+	}
+
+	return &response, err
+}
+
+func (handler *UserHandler) UpdateNotificationStatus(ctx context.Context, request *pb.UpdateNotificationRequest) (*pb.SaveResponse, error) {
+	notID, err := uuid.Parse(request.NotificationID)
+	if err != nil {
+		log.Println(err)
+	}
+	err1 := handler.UserService.UpdateStatusByID(notID, model.SEEN)
+	if err1 != nil {
+		log.Println(err)
+	}
+	response := pb.SaveResponse{
+		Message: "Notification updated!",
+	}
+
+	return &response, err
 }
