@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"log"
+	"strconv"
+	"time"
 
 	"user_service/model"
 	"user_service/service"
@@ -134,6 +136,17 @@ func (userHandler *UserHandler) CreateRating(ctx context.Context, in *pb.CreateR
 	response := pb.CreateRatingResponse{
 		Message: message.Message,
 	}
+
+	notification := model.Notification{
+		ID:               uuid.New(),
+		Text:             "Korisnik " + rating.RaterName + " vas je ocijenio ocjenom: " + strconv.Itoa(rating.Rating) + ".",
+		NotificationTime: time.Now(),
+		UserID:           rating.UserId,
+		Status:           model.NOT_SEEN,
+		Category:         "HostGraded",
+	}
+	userHandler.UserService.NotificationRepo.Save(&notification)
+	println("Sacuvao sam ovu notifikaciju: " + notification.Text)
 
 	return &response, err
 }
@@ -273,13 +286,49 @@ func (handler *UserHandler) GetAllNotificationsForUser(ctx context.Context, requ
 		println(j, ". Notification: ", tmp.Text)
 	}
 
+	settings, err := handler.UserService.UserNotRepo.GetForUserID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	println("---------------------ovo je podesavanje za tog korisnika:")
+	println("RequestCreated:", settings.RequestCreated)
+	println("ReservationCanceled:", settings.RequestCreated)
+	println("HostGraded:", settings.RequestCreated)
+	println("AccommodationGraded:", settings.RequestCreated)
+	println("StatusChange:", settings.RequestCreated)
+	println("ReservationReply:", settings.RequestCreated)
+
 	response := &pb.GetAllResponse{
 		Notifications: []*pb.SaveRequest{},
 	}
 
 	for _, notification := range notifications {
-		current := mapSaveNotificationFromNotification(&notification)
-		response.Notifications = append(response.Notifications, current)
+		if notification.Category == "RequestCreated" && settings.RequestCreated == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+		if notification.Category == "ReservationCanceled" && settings.ReservationCanceled == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+		if notification.Category == "HostGraded" && settings.HostGraded == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+		if notification.Category == "AccommodationGraded" && settings.AccommodationGraded == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+		if notification.Category == "StatusChange" && settings.StatusChange == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+		if notification.Category == "ReservationReply" && settings.ReservationReply == true {
+			current := mapSaveNotificationFromNotification(&notification)
+			response.Notifications = append(response.Notifications, current)
+		}
+
 	}
 
 	println("Notifications koje vraca Notifications Servis:")
@@ -320,6 +369,47 @@ func (handler *UserHandler) UpdateNotificationStatus(ctx context.Context, reques
 	}
 	response := pb.SaveResponse{
 		Message: "Notification updated!",
+	}
+
+	return &response, err
+}
+
+func (handler *UserHandler) UpdateNotificationSettings(ctx context.Context, request *pb.UpdateSettingsRequest) (*pb.SaveResponse, error) {
+	settings := mapSettingsFromUpdateSettings(request)
+
+	_, err := handler.UserService.UserNotRepo.FindByID(settings.UserID)
+	if err != nil {
+		log.Println(err)
+		response := handler.UserService.UserNotRepo.Save(settings)
+		println(response)
+		println("Sacuvao sam podesavanja")
+		response1 := pb.SaveResponse{
+			Message: "Sacuvao sam podesavanja",
+		}
+		return &response1, err
+	}
+
+	_, err1 := handler.UserService.UserNotRepo.UpdateNotificationSettings(settings)
+	if err1 != nil {
+		log.Println(err)
+		println("Greska pri azuriranju!")
+	}
+
+	response1 := pb.SaveResponse{
+		Message: "Azurirao sam podesavanja",
+	}
+	return &response1, err
+}
+
+func (handler *UserHandler) DeleteAllSettings(ctx context.Context, empty *pb.EmptyRequst) (*pb.SaveResponse, error) {
+
+	err := handler.UserService.UserNotRepo.DeleteAll()
+	if err != nil {
+		log.Println(err)
+	}
+	println("Obrisao sam sva podesavanja notifikacija iz baze!")
+	response := pb.SaveResponse{
+		Message: "Deleted all!",
 	}
 
 	return &response, err

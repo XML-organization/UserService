@@ -166,6 +166,7 @@ func mapNotificationFromSaveNotification(notification *pb.SaveRequest) model.Not
 		NotificationTime: notificationTime,
 		UserID:           userID,
 		Status:           model.NotificationStatus(statusInt),
+		Category:         notification.Category,
 	}
 }
 
@@ -189,5 +190,26 @@ func mapSaveNotificationFromNotification(notification *model.Notification) *pb.S
 		NotificationTime: notificationTime,
 		UserID:           usedID,
 		Status:           statusString,
+		Category:         notification.Category,
+	}
+}
+
+func mapSettingsFromUpdateSettings(settings *pb.UpdateSettingsRequest) model.UsersNotification {
+
+	userID, err := uuid.Parse(settings.UserID)
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+
+	return model.UsersNotification{
+		ID:                  uuid.New(),
+		UserID:              userID,
+		RequestCreated:      settings.RequestCreated,
+		AccommodationGraded: settings.AccommodationGraded,
+		ReservationCanceled: settings.ReservationCanceled,
+		HostGraded:          settings.HostGraded,
+		StatusChange:        settings.StatusChange,
+		ReservationReply:    settings.ReservationReply,
 	}
 }

@@ -15,15 +15,17 @@ import (
 type UserService struct {
 	UserRepo               *repository.UserRepository
 	NotificationRepo       *repository.NotificationRepository
+	UserNotRepo            *repository.UserNotificationRepository
 	UserNeo4jRepo          *repository.Neo4jUserRepository
 	orchestrator           *ChangePasswordOrchestrator
 	updateUserOrchestrator *UpdateUserOrchestrator
 }
 
-func NewUserService(repo *repository.UserRepository, notrepo *repository.NotificationRepository, neo4jRepo *repository.Neo4jUserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
+func NewUserService(repo *repository.UserRepository, notrepo *repository.NotificationRepository, userNotRepo *repository.UserNotificationRepository, neo4jRepo *repository.Neo4jUserRepository, orchestrator *ChangePasswordOrchestrator, updateUserOrchestrator *UpdateUserOrchestrator) *UserService {
 	return &UserService{
 		UserRepo:               repo,
 		NotificationRepo:       notrepo,
+		UserNotRepo:            userNotRepo,
 		UserNeo4jRepo:          neo4jRepo,
 		orchestrator:           orchestrator,
 		updateUserOrchestrator: updateUserOrchestrator,

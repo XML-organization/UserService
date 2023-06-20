@@ -38,6 +38,7 @@ func (server *Server) Start() {
 	neo4jDriver := server.initNeo4jDriver()
 	userRepo := server.initUserRepository(postgresClient)
 	notRepo := server.initNotificationRepository(postgresClient)
+	userNotRepo := server.initUserNotificationRepository(postgresClient)
 	userNeo4jRepo := server.initUserNeo4jRepository(neo4jDriver)
 	ratingRepo := server.initRatingRepository(postgresClient)
 
@@ -51,7 +52,7 @@ func (server *Server) Start() {
 	replySubscriber1 := server.initSubscriber(server.config.UpdateUserReplySubject, QueueGroup)
 	updateUserOrchestrator := server.initUpdateUserOrchestrator(commandPublisher1, replySubscriber1)
 
-	userService := server.initUserService(userRepo, notRepo, userNeo4jRepo, changePasswordOrchestrator, updateUserOrchestrator)
+	userService := server.initUserService(userRepo, notRepo,userNotRepo, userNeo4jRepo, changePasswordOrchestrator, updateUserOrchestrator)
 	ratingService := server.initRatingService(ratingRepo)
 
 	//update user
@@ -153,6 +154,10 @@ func (server *Server) initNotificationRepository(client *gorm.DB) *repository.No
 	return repository.NewNotificationRepository(client)
 }
 
+func (server *Server) initUserNotificationRepository(client *gorm.DB) *repository.UserNotificationRepository {
+	return repository.NewUserNotificationRepository(client)
+}
+
 func (server *Server) initUserNeo4jRepository(driver *neo4j.Driver) *repository.Neo4jUserRepository {
 	return repository.NewNeo4jUserRepository(*driver)
 }
@@ -161,8 +166,8 @@ func (server *Server) initRatingRepository(client *gorm.DB) *repository.RatingRe
 	return repository.NewRatingRepository(client)
 }
 
-func (server *Server) initUserService(repo *repository.UserRepository, notRepo *repository.NotificationRepository, neo4jRepo *repository.Neo4jUserRepository, changePassOrchestrator *service.ChangePasswordOrchestrator, updateUserOrchestrator *service.UpdateUserOrchestrator) *service.UserService {
-	return service.NewUserService(repo, notRepo, neo4jRepo, changePassOrchestrator, updateUserOrchestrator)
+func (server *Server) initUserService(repo *repository.UserRepository, notRepo *repository.NotificationRepository, userNotRepo *repository.UserNotificationRepository, neo4jRepo *repository.Neo4jUserRepository, changePassOrchestrator *service.ChangePasswordOrchestrator, updateUserOrchestrator *service.UpdateUserOrchestrator) *service.UserService {
+	return service.NewUserService(repo, notRepo, userNotRepo, neo4jRepo, changePassOrchestrator, updateUserOrchestrator)
 }
 
 func (server *Server) initRatingService(repo *repository.RatingRepository) *service.RatingService {
