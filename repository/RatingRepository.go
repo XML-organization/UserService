@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"log"
 	"time"
 	"user_service/model"
 
@@ -16,6 +17,7 @@ type RatingRepository struct {
 func NewRatingRepository(db *gorm.DB) *RatingRepository {
 	err := db.AutoMigrate(&model.Rating{})
 	if err != nil {
+		log.Println(err)
 		return nil
 	}
 
@@ -29,6 +31,7 @@ func (repo *RatingRepository) CreateRating(rating model.Rating) (model.RequestMe
 	dbResult := repo.DatabaseConnection.Save(&rating)
 
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return model.RequestMessage{
 			Message: "An error occured, please try again!",
 		}, dbResult.Error
@@ -43,6 +46,7 @@ func (repo *RatingRepository) WasGuestRatedHost(hostID uuid.UUID, guestID uuid.U
 	var rating model.Rating
 	err := repo.DatabaseConnection.Where("user_id = ? AND rater_id = ?", hostID, guestID).First(&rating).Error
 	if err != nil {
+		log.Println(err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil // Ocena nije pronađena
 		}
@@ -56,6 +60,7 @@ func (repo *RatingRepository) DeleteRating(hostId string, guestId string) (model
 	rating := model.Rating{}
 	err := repo.DatabaseConnection.Where("user_id = ? AND rater_id = ?", hostId, guestId).First(&rating).Error
 	if err != nil {
+		log.Println(err)
 		return model.RequestMessage{
 			Message: "Rating not found!",
 		}, err
@@ -64,6 +69,7 @@ func (repo *RatingRepository) DeleteRating(hostId string, guestId string) (model
 	// Brisanje ocjene iz baze podataka
 	dbResult := repo.DatabaseConnection.Delete(&rating)
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return model.RequestMessage{
 			Message: "An error occurred, please try again!",
 		}, dbResult.Error
@@ -79,6 +85,7 @@ func (repo *RatingRepository) UpdateRating(hostId string, guestId string, newRat
 	rating := model.Rating{}
 	err := repo.DatabaseConnection.Where("user_id = ? AND rater_id = ?", hostId, guestId).First(&rating).Error
 	if err != nil {
+		log.Println(err)
 		return model.RequestMessage{
 			Message: "Rating not found!",
 		}, err
@@ -90,6 +97,7 @@ func (repo *RatingRepository) UpdateRating(hostId string, guestId string, newRat
 
 	dbResult := repo.DatabaseConnection.Save(&rating)
 	if dbResult.Error != nil {
+		log.Println(dbResult.Error)
 		return model.RequestMessage{
 			Message: "An error occurred, please try again!",
 		}, dbResult.Error
@@ -103,6 +111,7 @@ func (repo *RatingRepository) GetHostRatings(hostId string) ([]model.Rating, err
 	var ratings []model.Rating
 	err := repo.DatabaseConnection.Where("user_id = ?", hostId).Find(&ratings).Error
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return ratings, nil
